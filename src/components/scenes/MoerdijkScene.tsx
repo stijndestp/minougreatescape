@@ -72,6 +72,7 @@ export default function MoerdijkScene({ onComplete }: SceneProps) {
         interactive={phase === "play"}
         complete={complete}
         minou={phase === "cross" ? "crossing" : "idle"}
+        minouMood={phase === "wrong" ? "worried" : complete || phase === "outro" ? "happy" : selected ? "surprised" : "neutral"}
         onPart={onPart}
         onSlot={onSlot}
         onCrossEnd={() => setPhase((p) => (p === "cross" ? "outro" : p))}

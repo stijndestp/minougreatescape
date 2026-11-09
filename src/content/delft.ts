@@ -38,7 +38,7 @@ export const stage = {
 };
 
 /** Aantal effecten per fase. Vast en eindig: er ontstaan nooit extra hartjes buiten deze aantallen. */
-export const effects = { gateHearts: 18, hugHearts: 14, escalateHearts: 46, sparkles: 18, cupids: 4, endHearts: 22 };
+export const effects = { gateHearts: 18, hugHearts: 14, escalateHearts: 46, sparkles: 18, cupids: 4, endHearts: 22, fireworks: 6, endConfetti: 36 };
 
 /** Geluiden per moment: naam van het geluid, of null om het uit te zetten. */
 export const sounds = {
@@ -65,6 +65,10 @@ export const delftTexts = {
   muteOn: "Geluid aan",
   muteOff: "Geluid uit",
   gateLabel: "De gesloten poort in Delft",
+  /** Initialen op het hartmedaillon boven de poort (alleen decoratie). */
+  gateInitials: "M ♥ J",
+  /** Woordje dat bij elk kusje even oppopt (alleen decoratie). */
+  kissPop: "SMAK!",
 
   intro: [
     sint("Zo Minou! Je hebt het dan toch gered. Van Tilburg tot Delft, wat heb jij allemaal moeten doorstaan!"),

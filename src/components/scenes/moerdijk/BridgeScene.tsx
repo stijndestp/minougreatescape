@@ -11,9 +11,11 @@ import {
 } from "@/content/moerdijk";
 import type { BridgeState } from "@/game/bridge";
 import MinouSprite from "@/components/MinouSprite";
+import type { HeroMood } from "@/components/MinouHero";
 import RiverScenery from "./RiverScenery";
 
-const O = { stroke: "#2b1b3d", strokeWidth: 3, strokeLinejoin: "round" as const, vectorEffect: "non-scaling-stroke" as const };
+const INK = "#2b1b3d";
+const O = { stroke: INK, strokeWidth: 3, strokeLinejoin: "round" as const, vectorEffect: "non-scaling-stroke" as const };
 
 const shapeD = (id: string) => bridgeShapes.find((s) => s.id === id)!.d;
 
@@ -28,19 +30,23 @@ interface Props {
   interactive: boolean;
   complete: boolean;
   minou: MinouPose;
+  /** Gezichtsuitdrukking van Minou (alleen weergave). */
+  minouMood?: HeroMood;
   onPart: (partId: string) => void;
   onSlot: (slotId: string) => void;
   onCrossEnd: () => void;
 }
 
 const SPARKS = [0, 1, 2, 3, 4, 5, 6, 7];
+/** Lijndikte zodat Minou hier even dik getekend is als in Rotterdam (1.3 / schaal). */
+const MINOU_LINE = 1.3 / crossing.scale;
 
 /**
  * De hele brugscène in één vaste SVG (viewBox 1600 × 900). Onderdelen en
  * openingen gebruiken dezelfde vormdefinities; klikken werkt op stabiele ID's
  * en is onafhankelijk van schermgrootte.
  */
-export default function BridgeScene({ state, selectedId, shakeId, interactive, complete, minou, onPart, onSlot, onCrossEnd }: Props) {
+export default function BridgeScene({ state, selectedId, shakeId, interactive, complete, minou, minouMood = "neutral", onPart, onSlot, onCrossEnd }: Props) {
   const placedParts = new Set(Object.values(state.placed));
   const keyActivate = (fn: () => void) => (e: KeyboardEvent) => {
     if (e.key === "Enter" || e.key === " ") {
@@ -62,6 +68,19 @@ export default function BridgeScene({ state, selectedId, shakeId, interactive, c
           <stop offset="0" stopColor="#ff9a5c" />
           <stop offset="1" stopColor="#e0642a" />
         </linearGradient>
+        {/* klinknagels op de stalen onderdelen (patroon volgt de vorm vanzelf) */}
+        <pattern id="rivets" width="16" height="16" patternUnits="userSpaceOnUse">
+          <circle cx="8" cy="8" r="1.6" fill="#8a3a14" opacity={0.55} />
+          <circle cx="7.4" cy="7.4" r="0.7" fill="#ffd2b0" opacity={0.8} />
+        </pattern>
+        <radialGradient id="mo-vignette" cx=".5" cy=".45" r=".75">
+          <stop offset=".65" stopColor="#1f3a5a" stopOpacity="0" />
+          <stop offset="1" stopColor="#1f3a5a" stopOpacity=".32" />
+        </radialGradient>
+        <linearGradient id="bench-top" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#d99a58" />
+          <stop offset="1" stopColor="#b97a3f" />
+        </linearGradient>
       </defs>
 
       <RiverScenery />
@@ -69,8 +88,14 @@ export default function BridgeScene({ state, selectedId, shakeId, interactive, c
       {/* voorgrond: Brabantse oever met werkbank voor de onderdelen */}
       <path d="M0 636 Q300 600 580 640 Q800 676 830 760 L810 900 H0Z" fill="#7acb63" {...O} />
       <path d="M0 656 Q300 626 560 662 Q760 694 800 770" fill="none" stroke="#a6e58c" strokeWidth={8} strokeLinecap="round" opacity={0.7} />
-      <rect x={56} y={668} width={748} height={232} rx={14} fill="#c98a4b" {...O} />
+      {[[20, 650], [300, 626], [600, 652]].map(([x, y], i) => (
+        <path key={i} d={`M${x} ${y} l6 -18 l4 16 l6 -22 l4 22 l6 -14 l2 16`} fill="#4fa83f" stroke={INK} strokeWidth={2} strokeLinejoin="round" />
+      ))}
+      <ellipse cx={430} cy={904} rx={400} ry={20} fill="#2b1b3d" opacity={0.25} />
+      <rect x={56} y={668} width={748} height={232} rx={14} fill="url(#bench-top)" {...O} />
       {[0, 1, 2, 3].map((i) => <path key={i} d={`M${60} ${700 + i * 60} H800`} stroke="#a96d33" strokeWidth={4} opacity={0.7} />)}
+      {[0, 1, 2].map((i) => <path key={i} d={`M${200 + i * 230} ${672} q30 20 0 40 q-30 24 10 60`} fill="none" stroke="#a96d33" strokeWidth={2} opacity={0.35} />)}
+      <rect x={60} y={672} width={740} height={6} rx={3} fill="#f0b878" opacity={0.7} />
       {[[60, 668], [790, 668]].map(([x, y]) => <rect key={x} x={x - 8} y={y - 6} width={20} height={240} fill="#a96d33" {...O} />)}
       {[[870, 800], [900, 840]].map(([x, y]) => <circle key={x} cx={x} cy={y} r={7} fill="#fff" opacity={0.9} />)}
 
@@ -113,6 +138,14 @@ export default function BridgeScene({ state, selectedId, shakeId, interactive, c
             <g className="placed-part" style={style}>
               <path d={shapeD(part.shapeId)} fill="url(#steel)" {...O} />
               <path d={shapeD(part.shapeId)} fill="none" stroke="#fff" strokeWidth={2} opacity={0.35} vectorEffect="non-scaling-stroke" transform="scale(.86)" />
+              <path d={shapeD(part.shapeId)} fill="url(#rivets)" />
+            </g>
+            {/* "klik!": eenmalige vonkenkrans zodra het onderdeel vastzit */}
+            <g className="snap-sparkle" aria-hidden>
+              <circle r={44} fill="none" stroke="#fff6a8" strokeWidth={5} vectorEffect="non-scaling-stroke" />
+              {[0, 60, 120, 180, 240, 300].map((a) => (
+                <path key={a} transform={`rotate(${a}) translate(0 -58)`} d="M0 -8 L2.4 -2.4 L8 0 L2.4 2.4 L0 8 L-2.4 2.4 L-8 0 L-2.4 -2.4Z" fill={a % 120 ? "#ffd45e" : "#fff"} stroke={INK} strokeWidth={1} vectorEffect="non-scaling-stroke" />
+              ))}
             </g>
           </g>
         );
@@ -145,6 +178,7 @@ export default function BridgeScene({ state, selectedId, shakeId, interactive, c
               <rect x={-64} y={-64} width={128} height={128} fill="transparent" />
               <path d={shapeD(part.shapeId)} fill="url(#steel)" {...O} />
               <path d={shapeD(part.shapeId)} fill="none" stroke="#fff" strokeWidth={2} opacity={0.35} vectorEffect="non-scaling-stroke" transform="scale(.86)" />
+              <path d={shapeD(part.shapeId)} fill="url(#rivets)" />
             </g>
           </g>
         );
@@ -161,9 +195,12 @@ export default function BridgeScene({ state, selectedId, shakeId, interactive, c
             if (e.target === e.currentTarget && minou === "crossing") onCrossEnd();
           }}
         >
-          <MinouSprite />
+          <MinouSprite mood={minouMood} arms={complete && minou !== "crossing" ? "cheer" : "down"} line={MINOU_LINE} />
         </g>
       </g>
+
+      {/* zacht vignet voor diepte (niet klikbaar) */}
+      <rect width={1600} height={900} fill="url(#mo-vignette)" pointerEvents="none" aria-hidden />
 
       {/* succes-vonken bij de voltooide brug */}
       {complete && (

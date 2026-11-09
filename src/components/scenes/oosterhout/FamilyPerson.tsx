@@ -88,7 +88,7 @@ function Face({ mood, look }: { mood: Mood; look: PersonLook }) {
           <path d="M-32 -176 L-8 -168 M32 -176 L8 -168" stroke="#2b1b3d" strokeWidth={4} strokeLinecap="round" />
         </g>
       ) : (
-        <g>
+        <g className="fam-blink">
           <circle className="fam-eye" cx={-18} cy={eyeY} r={5.5} fill={look.eyeColor ?? "#2b1b3d"} />
           <circle className="fam-eye" cx={18} cy={eyeY} r={5.5} fill={look.eyeColor ?? "#2b1b3d"} />
           {look.eyeColor && (
@@ -190,6 +190,9 @@ export default function FamilyPerson({ look, mood = "neutral" }: { look: PersonL
       {look.hairStyle === "long" && <Hair look={look} />}
       {/* schouders en romp */}
       <path d="M-92 0 Q-94 -86 -42 -102 H42 Q94 -86 92 0Z" fill={look.shirt} {...LINE} />
+      {/* schaduwzijde en schouderlicht (licht van de kroonluchter, linksboven) */}
+      <path d="M34 -101 Q84 -88 90 -2 H58 Q62 -56 34 -101Z" fill="rgba(30,10,40,.16)" />
+      <path d="M-70 -70 Q-60 -92 -40 -98" fill="none" stroke="#fff" strokeWidth={5} strokeLinecap="round" opacity={0.18} />
       {look.undershirt && <path d="M-34 -100 L0 -76 L34 -100 L30 0 H-30Z" fill={look.undershirt} {...LINE} strokeWidth={2.5} />}
       <path d={look.undershirt || look.openCollar ? "M-26 -102 L0 -64 L26 -102Z" : "M-18 -102 L0 -84 L18 -102Z"} fill={look.undershirt ? look.undershirt : look.skin} {...LINE} strokeWidth={2.5} />
       {look.openCollar && (
@@ -215,6 +218,8 @@ export default function FamilyPerson({ look, mood = "neutral" }: { look: PersonL
         </g>
       )}
       <circle cx={0} cy={-160} r={54} fill={look.skin} {...LINE} />
+      <path d="M-46 -132 Q0 -94 46 -132 Q30 -110 0 -108 Q-30 -110 -46 -132Z" fill="rgba(140,70,30,.12)" />
+      <rect x={-15} y={-106} width={30} height={7} fill="rgba(140,70,30,.18)" />
       {look.hairStyle !== "long" && <Hair look={look} />}
       {look.hairStyle === "long" && !look.parting && (
         <path d="M-54 -166 Q-30 -204 0 -200 Q30 -204 54 -166 Q36 -184 0 -182 Q-36 -184 -54 -166Z" fill={look.hair} {...LINE} strokeWidth={2.5} />

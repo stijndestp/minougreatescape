@@ -15,7 +15,8 @@ import DialogueBox from "../DialogueBox";
 import PietPortrait from "../PietSprite";
 import type { SceneProps } from "../SceneHost";
 import { ClueNotes, DestinationBoard, TrainBoard } from "./rotterdam/DepartureBoard";
-import StationScene from "./rotterdam/StationScene";
+import type { HeroMood } from "../MinouHero";
+import StationScene, { type MinouEmote } from "./rotterdam/StationScene";
 import TherapyPiet from "./rotterdam/TherapyPiet";
 
 const rules = { trains, clues };
@@ -89,6 +90,15 @@ export default function RotterdamScene({ onComplete }: SceneProps) {
     return undefined;
   };
 
+  // Alleen weergave: Minou reageert met haar gezicht en een klein wolkje op wat er gebeurt.
+  const minouMood: HeroMood =
+    phase === "announcement" ? (announcing ? "surprised" : "neutral")
+    : phase === "wrong" || phase === "therapy" ? "worried"
+    : phase === "found" || phase === "choice" || phase === "delft" || boardState ? "happy"
+    : "neutral";
+  const emote: MinouEmote =
+    phase === "clues" || phase === "puzzle" ? "?" : phase === "wrong" ? "!" : phase === "found" ? "♥" : null;
+
   const showNotes = phase === "clues" || phase === "puzzle" || phase === "wrong";
   const notesRevealed = phase === "clues" ? revealed : clues.length;
   const showTherapy = phase === "therapy" || phase === "advice";
@@ -102,6 +112,8 @@ export default function RotterdamScene({ onComplete }: SceneProps) {
         minou={boardState ? "boarding" : "idle"}
         departing={phase === "departing" || phase === "done"}
         announcing={announcing && phase === "announcement"}
+        minouMood={minouMood}
+        emote={emote}
       />
 
       {phase === "announcement" && (

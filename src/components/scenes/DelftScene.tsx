@@ -17,7 +17,7 @@ import type { SceneProps } from "../SceneHost";
 import CodeLock from "./delft/CodeLock";
 import DelftStage from "./delft/DelftStage";
 import EndScreen from "./delft/EndScreen";
-import { CupidArrows, EscalateOverlay, Hearts, Sparkles } from "./delft/FinaleEffects";
+import { CupidArrows, EscalateOverlay, Fireworks, Hearts, Sparkles } from "./delft/FinaleEffects";
 
 const rules = { codeHash };
 const reduce = (s: FinaleState, a: FinaleAction) => finaleReducer(rules, s, a);
@@ -111,6 +111,7 @@ export default function DelftScene({ onComplete, onHome }: SceneProps) {
           <EscalateOverlay durationMs={timeline.escalate} />
           <Hearts key="esc" count={effects.escalateHearts} origin="full" spreadMs={timeline.escalate * 0.85} riseMs={4200} salt={3} />
           <Hearts key="esc-c" count={14} origin="couple" spreadMs={timeline.escalate * 0.85} riseMs={2600} salt={4} />
+          <Fireworks spreadMs={timeline.escalate * 0.75} />
           <Sparkles spreadMs={timeline.escalate * 0.9} />
           <CupidArrows spreadMs={timeline.escalate * 0.8} />
         </>

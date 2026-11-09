@@ -82,14 +82,29 @@ const MapLayers = memo(function MapLayers() {
           <stop offset="0" stopColor="#7fd6f5" />
           <stop offset="1" stopColor="#4db8e6" />
         </linearGradient>
+        {/* zachte golfjes op zee en een lichte "papier/gras"-textuur op het land */}
+        <pattern id="map-waves" width="120" height="70" patternUnits="userSpaceOnUse">
+          <path d="M10 20 q10 -8 20 0 t20 0" fill="none" stroke="#fff" strokeWidth={3} strokeLinecap="round" opacity={0.35} />
+          <path d="M70 55 q10 -8 20 0 t20 0" fill="none" stroke="#fff" strokeWidth={3} strokeLinecap="round" opacity={0.25} />
+        </pattern>
+        <pattern id="map-land" width="46" height="46" patternUnits="userSpaceOnUse">
+          <circle cx="8" cy="10" r="2.2" fill="#2b1b3d" opacity={0.06} />
+          <circle cx="31" cy="33" r="2.2" fill="#2b1b3d" opacity={0.06} />
+          <path d="M28 12 l3 -6 l3 6" fill="none" stroke="#fff" strokeWidth={2} strokeLinecap="round" opacity={0.25} />
+        </pattern>
       </defs>
       <rect x={-2000} y={-2000} width={6000} height={5000} fill="url(#sea)" />
+      <rect x={-2000} y={-2000} width={6000} height={5000} fill="url(#map-waves)" />
 
       {neighbourPaths.map((p) => (
         <path key={p.name} d={p.d} fill="#efe4c6" stroke="#efe4c6" strokeWidth={8} strokeLinejoin="round" />
       ))}
       {provincePaths.map((p) => (
         <path key={`shore-${p.name}`} d={p.d} fill="#a9e6fa" stroke="#a9e6fa" strokeWidth={26} strokeLinejoin="round" />
+      ))}
+      {/* lichte schaduwrand langs de kust voor diepte */}
+      {provincePaths.map((p) => (
+        <path key={`depth-${p.name}`} d={p.d} fill="none" stroke="#2f9fd0" strokeWidth={10} strokeLinejoin="round" opacity={0.18} transform="translate(0 6)" />
       ))}
       {provincePaths.map((p) => (
         <path
@@ -100,6 +115,9 @@ const MapLayers = memo(function MapLayers() {
           strokeWidth={3}
           strokeLinejoin="round"
         />
+      ))}
+      {provincePaths.map((p) => (
+        <path key={`tex-${p.name}`} d={p.d} fill="url(#map-land)" />
       ))}
       {waterBodyPaths.map((w) => (
         <path key={w.name} d={w.d} fill={WATER} fillRule="evenodd" stroke={WATER_DARK} strokeWidth={5} strokeLinejoin="round" />
@@ -148,11 +166,18 @@ const MapLayers = memo(function MapLayers() {
           opacity={0.9}
         />
       ))}
-      <path d={routeD} fill="none" stroke="#fff" strokeWidth={16} strokeLinecap="round" strokeLinejoin="round" opacity={0.65} />
+      {/* route: zachte schaduw, witte band en roze stippellijn */}
+      <path d={routeD} fill="none" stroke="#2b1b3d" strokeWidth={18} strokeLinecap="round" strokeLinejoin="round" opacity={0.12} transform="translate(0 5)" />
+      <path d={routeD} fill="none" stroke="#fff" strokeWidth={16} strokeLinecap="round" strokeLinejoin="round" opacity={0.75} />
       <path d={routeD} fill="none" stroke="#ff3d68" strokeWidth={7} strokeDasharray="3 16" strokeLinecap="round" strokeLinejoin="round" />
+      {/* Moerdijkbrug: klein boogbrugje in de stijl van de scène */}
       <g transform={`translate(${bridgePoint.x} ${bridgePoint.y})`} aria-label="Moerdijkbrug">
-        <rect x={-24} y={-7} width={48} height={14} rx={4} fill="#ff8a3d" stroke="#fff" strokeWidth={3} />
-        <path d="M-18 -7 Q0 -26 18 -7" fill="none" stroke="#fff" strokeWidth={4} />
+        <ellipse cx={0} cy={9} rx={28} ry={5} fill="#2b1b3d" opacity={0.18} />
+        <rect x={-26} y={-6} width={52} height={13} rx={4} fill="#ff8a3d" stroke="#2b1b3d" strokeWidth={2.5} />
+        <path d="M-20 -6 Q0 -30 20 -6" fill="none" stroke="#2b1b3d" strokeWidth={7} strokeLinecap="round" />
+        <path d="M-20 -6 Q0 -30 20 -6" fill="none" stroke="#ffb07a" strokeWidth={3.5} strokeLinecap="round" />
+        <path d="M-10 -6 V-15 M0 -6 V-18 M10 -6 V-15" stroke="#2b1b3d" strokeWidth={2} />
+        <path d="M-22 -2 H22" stroke="#fff" strokeWidth={2} strokeDasharray="5 4" opacity={0.8} />
       </g>
     </>
   );
@@ -230,7 +255,11 @@ export default function WorldMap({ ref, statuses, numbers, effects, minouAt, bus
               {status === "available" && <circle className="pulse" r={30} />}
               {status === "active" && <circle className="ring-active" r={34} />}
               {effects.unlockId === c.id && <circle className="unlock-flash" r={30} />}
+              {/* markering: schaduw, bol met inktrand en glimlicht (zelfde lijnwerk als de scènes) */}
+              <ellipse cx={0} cy={optional ? 14 : 26} rx={optional ? 12 : 22} ry={optional ? 3.5 : 6} fill="#2b1b3d" opacity={0.2} />
+              <circle r={(optional ? 14 : 24) + 5} fill="none" stroke="#2b1b3d" strokeWidth={2.5} />
               <circle r={optional ? 14 : 24} className="loc-dot" />
+              {!optional && <path d="M-14 -8 Q-12 -16 -4 -18" fill="none" stroke="#fff" strokeWidth={3.5} strokeLinecap="round" opacity={0.55} />}
               {!optional && status === "locked" && <Padlock />}
               {!optional && status !== "locked" && (
                 <text className="loc-num" textAnchor="middle" y={9}>
@@ -255,6 +284,7 @@ export default function WorldMap({ ref, statuses, numbers, effects, minouAt, bus
       {leiden && leidenCross !== "hidden" && (
         <g transform={`translate(${leiden.point.x} ${leiden.point.y})`} style={{ pointerEvents: "none" }} aria-hidden>
           <g className={leidenCross === "animate" ? "leiden-mark leiden-mark-anim" : "leiden-mark"}>
+            <circle r={29} fill="none" stroke="#2b1b3d" strokeWidth={2.5} />
             <circle r={24} className="loc-dot" fill="#e5383b" />
             <path d="M-9 -9 L9 9 M9 -9 L-9 9" stroke="#fff" strokeWidth={6} strokeLinecap="round" fill="none" />
           </g>
@@ -270,7 +300,7 @@ export default function WorldMap({ ref, statuses, numbers, effects, minouAt, bus
         transform={`translate(${minouAt.x} ${minouAt.y})`}
         style={{ pointerEvents: "none" }}
       >
-        <MinouSprite />
+        <MinouSprite line={1.3} pin />
       </g>
     </svg>
   );

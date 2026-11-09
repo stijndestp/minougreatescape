@@ -42,10 +42,42 @@ export function Hearts({ count, origin, spreadMs, riseMs, salt = 1 }: HeartsProp
         } as CSSProperties;
         return (
           <span key={i} className="fx-heart" style={style}>
-            ♥
+            <HeartIcon />
           </span>
         );
       })}
+    </div>
+  );
+}
+
+/** Hartje als SVG (kleur via `color`), met een glimlichtje: mooier dan een tekstteken en overal gelijk. */
+export function HeartIcon() {
+  return (
+    <svg viewBox="-24 -24 48 42" width="1em" height="1em" aria-hidden>
+      <path d="M0 14 C-22 -2 -18 -22 -6 -22 C-1 -22 0 -16 0 -14 C0 -16 1 -22 6 -22 C18 -22 22 -2 0 14Z" fill="currentColor" stroke="#2b1b3d" strokeWidth={2.4} strokeLinejoin="round" />
+      <path d="M-11 -14 Q-15 -8 -12 -3" fill="none" stroke="#fff" strokeWidth={3} strokeLinecap="round" opacity={0.75} />
+    </svg>
+  );
+}
+
+/** Vuurwerk boven de daken: een vast aantal pijlen die elk één keer openspatten. */
+export function Fireworks({ spreadMs }: { spreadMs: number }) {
+  return (
+    <div className="fx-layer fx-fireworks" aria-hidden>
+      {Array.from({ length: effects.fireworks }, (_, i) => (
+        <span
+          key={i}
+          className="fx-firework"
+          style={
+            {
+              left: `${10 + rnd(i, 21) * 80}%`,
+              top: `${8 + rnd(i, 22) * 22}%`,
+              color: ["#ffd45e", "#ff8fc0", "#8fe3ff", "#ffffff", "#ff6b8f", "#b8ff9a"][i % 6],
+              animationDelay: `${(i / effects.fireworks) * spreadMs}ms`,
+            } as CSSProperties
+          }
+        />
+      ))}
     </div>
   );
 }

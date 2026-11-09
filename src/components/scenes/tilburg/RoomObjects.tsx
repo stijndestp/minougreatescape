@@ -34,6 +34,18 @@ export default function RoomObjects({ svgRef, items, collected, vectors, shakeId
         const style = done && v ? ({ "--dx": `${v.dx / scale}px`, "--dy": `${v.dy / scale}px` } as CSSProperties) : undefined;
         return (
           <g key={item.id} transform={`translate(${item.x} ${item.y}) scale(${scale})`}>
+            {/* contactschaduw (blijft liggen en vervaagt als het voorwerp in de tas vliegt) */}
+            <ellipse className={done ? "obj-shadow is-gone" : "obj-shadow"} cx={0} cy={-1} rx={art.w * 0.42} ry={5} fill="rgba(60,20,40,.28)" />
+            {done && (
+              <g className="obj-sparkle" aria-hidden>
+                {[0, 45, 90, 135, 180, 225, 270, 315].map((a) => (
+                  <g key={a} transform={`rotate(${a} 0 ${-art.h / 2})`}>
+                    <path className="obj-sparkle-ray" d={`M0 ${-art.h / 2 - 20} l3 8 l-3 8 l-3 -8z`} fill={a % 90 ? "#ff8fb3" : "#ffd45e"} />
+                  </g>
+                ))}
+                <circle className="obj-sparkle-ring" cx={0} cy={-art.h / 2} r={art.w * 0.45} fill="none" stroke="#ffd45e" strokeWidth={4} />
+              </g>
+            )}
             <g
               className={cls}
               style={style}

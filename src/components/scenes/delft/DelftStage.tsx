@@ -1,9 +1,10 @@
 "use client";
 
 import type { CSSProperties } from "react";
-import { delftTexts, stage, timeline } from "@/content/delft";
+import type { HeroMood } from "@/components/MinouHero";
+import { delftTexts, kissTimes, stage, timeline } from "@/content/delft";
 import type { FinalePhase } from "@/game/finale";
-import { JobArt, MinouArt, SinterklaasArt, type JobPose } from "./DelftCast";
+import { JobArt, MinouArt, SinterklaasArt, type JobMood, type JobPose } from "./DelftCast";
 import DelftScenery from "./DelftScenery";
 import LoveGate from "./LoveGate";
 
@@ -15,6 +16,7 @@ interface Props {
 
 const RUN_PHASES: FinalePhase[] = ["run"];
 const REUNION: FinalePhase[] = ["hug", "escalate", "outro", "end"];
+const BIG_HEART = "M0 120 C-190 0 -150 -170 -50 -170 C-10 -170 0 -130 0 -116 C0 -130 10 -170 50 -170 C150 -170 190 0 0 120Z";
 
 /**
  * De hele Delft-scène in één vaste SVG (viewBox 1600 × 900). De personages staan
@@ -38,6 +40,15 @@ export default function DelftStage({ phase, wrongKey }: Props) {
   const runDistance = (stage.minouRun.x - stage.minouStart.x) / s;
   const hugGap = (stage.minouHug.x - stage.minouRun.x) / s;
 
+  // Alleen weergave: gezichtsuitdrukkingen per fase.
+  const minouMood: HeroMood =
+    reunion ? "love" : phase === "wrong" ? "worried" : phase === "gate" ? "surprised" : phase === "run" || phase === "intro" ? "happy" : "neutral";
+  const jobMood: JobMood = reunion ? "love" : phase === "gate" ? "surprised" : "smile";
+
+  // Midden tussen de hoofden van het knuffelende stel (voor het grote hart en de kusjes).
+  const couple = { x: (stage.minouHug.x + stage.jobHug.x) / 2, y: stage.minouHug.y - 150 * s * 0.62 };
+  const kisses = phase === "hug" ? kissTimes.hug : phase === "escalate" ? kissTimes.escalate : [];
+
   return (
     <svg
       className={`delft-svg phase-${phase}`}
@@ -50,10 +61,27 @@ export default function DelftStage({ phase, wrongKey }: Props) {
       <g transform="translate(0 -60)">
       <DelftScenery />
 
+      {/* groot gloeiend hart achter het stel tijdens de hereniging */}
+      {reunion && (
+        <g transform={`translate(${couple.x} ${couple.y + 40})`} aria-hidden>
+          <g className={phase === "escalate" ? "couple-heart couple-heart-wild" : "couple-heart"}>
+            <path d={BIG_HEART} fill="url(#couple-heart-fill)" />
+            <path d={BIG_HEART} fill="none" stroke="#fff" strokeWidth={4} opacity={0.5} transform="scale(.9)" />
+          </g>
+        </g>
+      )}
+      <defs>
+        <radialGradient id="couple-heart-fill" cx=".5" cy=".45" r=".6">
+          <stop offset="0" stopColor="#fff2c4" stopOpacity=".95" />
+          <stop offset=".45" stopColor="#ff8fc0" stopOpacity=".7" />
+          <stop offset="1" stopColor="#ff4d8d" stopOpacity=".15" />
+        </radialGradient>
+      </defs>
+
       {/* Job wacht achter de poort */}
       <g transform={`translate(${jobPos.x} ${jobPos.y}) scale(${s})`}>
         <g className={reunion ? (phase === "escalate" ? "hug-job hug-wild" : "hug-job") : "job-idle"} key={reunion ? "hug" : jobPose}>
-          <JobArt pose={jobPose} />
+          <JobArt pose={jobPose} mood={jobMood} />
         </g>
       </g>
 
@@ -88,9 +116,25 @@ export default function DelftStage({ phase, wrongKey }: Props) {
             } as CSSProperties
           }
         >
-          <MinouArt />
+          <MinouArt mood={minouMood} />
         </g>
       </g>
+
+      {/* "SMAK!" en kuslipjes, precies op de momenten van de kusgeluidjes */}
+      {kisses.length > 0 && (
+        <g key={phase} transform={`translate(${couple.x} ${couple.y})`} aria-hidden>
+          {kisses.map((ms, i) => (
+            <g key={ms} transform={`translate(${(i % 2 ? 1 : -1) * (40 + (i % 3) * 18)} ${-30 - (i % 3) * 22}) rotate(${i % 2 ? 12 : -12})`}>
+              <g className="kiss-pop" style={{ animationDelay: `${ms}ms` }}>
+                <path d="M-22 0 Q-11 -14 0 -5 Q11 -14 22 0 Q11 14 0 8 Q-11 14 -22 0Z" fill="#e8174f" stroke="#2b1b3d" strokeWidth={3} strokeLinejoin="round" />
+                <path d="M-18 0 Q0 4 18 0" fill="none" stroke="#8a0a2e" strokeWidth={2.4} />
+                <path d="M-12 -6 Q-6 -9 -2 -5" fill="none" stroke="#fff" strokeWidth={2.4} strokeLinecap="round" opacity={0.7} />
+                <text className="kiss-word" y={-22} textAnchor="middle">{delftTexts.kissPop}</text>
+              </g>
+            </g>
+          ))}
+        </g>
+      )}
 
       {phase === "run" && (
         <text className="slowmo-label" x={800} y={190} textAnchor="middle">

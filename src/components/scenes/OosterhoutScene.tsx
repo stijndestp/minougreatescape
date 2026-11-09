@@ -8,6 +8,7 @@ import DialogueBox from "../DialogueBox";
 import type { SceneProps } from "../SceneHost";
 import DinnerTable from "./oosterhout/DinnerTable";
 import { FamilyPortrait } from "./oosterhout/FamilyPerson";
+import { MinouPortrait } from "../MinouHero";
 
 type Phase = "intro" | "ask" | "choose" | "wrong" | "right" | "serving" | "outro" | "finale";
 
@@ -64,7 +65,13 @@ export default function OosterhoutScene({ onComplete }: SceneProps) {
   }
 
   const portrait = (line: DialogueLine) =>
-    line.speaker === "family" && member ? <FamilyPortrait look={member.look} mood={memberMood} size={110} /> : undefined;
+    line.speaker === "family" && member ? (
+      <FamilyPortrait look={member.look} mood={memberMood} size={110} />
+    ) : line.speaker === "minou" ? (
+      <MinouPortrait mood="happy" size={110} />
+    ) : undefined;
+  // Na een goed antwoord: de volgende gang wordt opgediend (alleen weergave).
+  const nextCourse = phase === "serving" && !isDinnerComplete(questions, dinner) ? quiz[dinner.current] : undefined;
 
   const speak = (text: string): DialogueLine[] => [
     { speaker: "family", name: memberLabel, memberId: member?.id, text },
@@ -79,7 +86,14 @@ export default function OosterhoutScene({ onComplete }: SceneProps) {
         activeMood={memberMood}
         minouMood={minouMood}
         burstKey={burstKey}
+        minouCheer={phase === "finale"}
       />
+
+      {nextCourse && (
+        <p key={nextCourse.id} className="course-banner" aria-live="polite">
+          {t.progress(dinner.current, questions.length, nextCourse.course)}
+        </p>
+      )}
 
       {phase !== "intro" && phase !== "outro" && phase !== "finale" && (
         <p className="dinner-progress">
@@ -88,7 +102,7 @@ export default function OosterhoutScene({ onComplete }: SceneProps) {
       )}
 
       {phase === "intro" && (
-        <DialogueBox key="intro" compact lines={t.intro} onComplete={() => setPhase("ask")} />
+        <DialogueBox key="intro" compact lines={t.intro} portrait={portrait} onComplete={() => setPhase("ask")} />
       )}
 
       {phase === "ask" && member && question && (
@@ -149,6 +163,7 @@ export default function OosterhoutScene({ onComplete }: SceneProps) {
           key="outro"
           compact
           lines={t.outro}
+          portrait={portrait}
           onComplete={() => {
             setBurstKey((k) => k + 1);
             setPhase("finale");

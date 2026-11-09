@@ -6,6 +6,9 @@ import { createPackingState, isPackingComplete, pickItem } from "@/game/packing"
 import DialogueBox from "../DialogueBox";
 import type { SceneProps } from "../SceneHost";
 import RoomBackground from "./tilburg/RoomBackground";
+import { MinouPortrait, type HeroArms, type HeroMood } from "../MinouHero";
+import type { DialogueLine } from "@/content/dialogue";
+import RoomMinou, { RoomLight } from "./tilburg/RoomMinou";
 import RoomObjects, { type FlyVector } from "./tilburg/RoomObjects";
 import TravelBag from "./tilburg/TravelBag";
 
@@ -18,6 +21,7 @@ export default function TilburgScene({ onComplete }: SceneProps) {
   const [vectors, setVectors] = useState<Record<string, FlyVector>>({});
   const [reaction, setReaction] = useState<{ text: string; key: number } | null>(null);
   const [shakeId, setShakeId] = useState<string | null>(null);
+  const [cheerKey, setCheerKey] = useState(0);
   const attempts = useRef<Record<string, number>>({});
   const reactionCount = useRef(0);
   const bagRef = useRef<HTMLDivElement>(null);
@@ -37,6 +41,13 @@ export default function TilburgScene({ onComplete }: SceneProps) {
     const id = setTimeout(() => setPhase("outro"), 2200);
     return () => clearTimeout(id);
   }, [phase]);
+
+  // Kort juichmoment van Minou na een goed voorwerp (alleen weergave).
+  useEffect(() => {
+    if (!cheerKey) return;
+    const id = setTimeout(() => setCheerKey(0), 1100);
+    return () => clearTimeout(id);
+  }, [cheerKey]);
 
   useEffect(() => {
     if (!shakeId) return;
@@ -63,6 +74,7 @@ export default function TilburgScene({ onComplete }: SceneProps) {
         }));
       }
       setPacking(result.state);
+      setCheerKey((k) => k + 1);
     } else if (result.outcome === "wrong") {
       const item = packingItems.find((i) => i.id === id);
       const pool = item?.reactions?.length ? item.reactions : t.genericWrong;
@@ -73,9 +85,19 @@ export default function TilburgScene({ onComplete }: SceneProps) {
     }
   }
 
+  /** Minou in de dialogen: exact hetzelfde ontwerp als in de scène. */
+  const minouPortrait = (line: DialogueLine) => (line.speaker === "minou" ? <MinouPortrait mood="happy" size={130} /> : undefined);
+
+  // Alleen weergave: Minou reageert op de keuzes van de speler.
+  const happyEnd = phase === "closing" || phase === "outro";
+  const minouMood: HeroMood = reaction ? "worried" : cheerKey || happyEnd || phase === "intro" ? "happy" : "neutral";
+  const minouArms: HeroArms = phase === "closing" || cheerKey ? "cheer" : phase === "outro" ? "wave" : "down";
+  const emote = reaction ? "!" : cheerKey ? "♥" : phase === "playing" && packing.collected.length === 0 ? "?" : null;
+
   return (
     <div className="tilburg">
       <RoomBackground />
+      <RoomMinou mood={minouMood} arms={minouArms} emote={emote} />
       <RoomObjects
         svgRef={objectsRef}
         items={packingItems}
@@ -85,6 +107,7 @@ export default function TilburgScene({ onComplete }: SceneProps) {
         locked={phase !== "playing" || !!reaction}
         onPick={onPick}
       />
+      <RoomLight />
 
       <TravelBag collected={packing.collected} closed={phase === "closing" || phase === "outro"} bagRef={bagRef} />
 
@@ -99,7 +122,7 @@ export default function TilburgScene({ onComplete }: SceneProps) {
         </div>
       )}
 
-      {phase === "intro" && <DialogueBox key="intro" lines={t.intro} onComplete={() => setPhase("playing")} />}
+      {phase === "intro" && <DialogueBox key="intro" lines={t.intro} portrait={minouPortrait} onComplete={() => setPhase("playing")} />}
       {phase === "playing" && reaction && (
         <DialogueBox
           key={reaction.key}
@@ -107,7 +130,7 @@ export default function TilburgScene({ onComplete }: SceneProps) {
           onComplete={() => setReaction(null)}
         />
       )}
-      {phase === "outro" && <DialogueBox key="outro" lines={t.outro} onComplete={onComplete} />}
+      {phase === "outro" && <DialogueBox key="outro" lines={t.outro} portrait={minouPortrait} onComplete={onComplete} />}
     </div>
   );
 }

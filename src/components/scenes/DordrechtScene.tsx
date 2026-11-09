@@ -91,6 +91,7 @@ export default function DordrechtScene({ onComplete }: SceneProps) {
         stamped={phase === "approved" || phase === "opening" || phase === "walking"}
         barrierOpen={phase === "opening" || phase === "walking"}
         minou={phase === "walking" ? "walk" : "wait"}
+        minouMood={phase === "wrong" ? "worried" : phase === "checking" ? "surprised" : phase === "approved" || phase === "opening" || phase === "walking" ? "happy" : "neutral"}
       />
 
       {phase === "intro" && (
